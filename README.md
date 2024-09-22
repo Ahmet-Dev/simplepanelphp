@@ -1,6 +1,4 @@
-
-![Simple](https://github.com/user-attachments/assets/680a3dbf-ba78-4e80-9d71-34890475b025)
-![Simple2](https://github.com/user-attachments/assets/f3848aea-5cd4-40b9-baf0-ab9fdc101bc0)
+![simple1](https://github.com/user-attachments/assets/f48d4bd1-0864-459c-b097-0f6e28743e82)
 
 # simplepanelphp
 Simplepanel v1.0.1
