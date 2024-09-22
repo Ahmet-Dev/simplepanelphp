@@ -55,6 +55,8 @@ RewriteRule ^.*$ index.php [L,QSA]
 # X-XSS-Protection header'ını ekleyerek XSS saldırılarına karşı korunma
 <IfModule mod_headers.c>
     Header set X-XSS-Protection "1; mode=block"
+Header set Content-Security-Policy "upgrade-insecure-requests; object-src 'none'; block-all-mixed-content; frame-ancestors 'self';...
+
 </IfModule>
 
 # HSTS header'ını ekleyerek HTTPS üzerinden güvenliği artırma ve zorunlu hale getirme
