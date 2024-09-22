@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /class/
+Disallow: /panel/
+
+Sitemap: https://www.orneksite.com/sitemap.xml

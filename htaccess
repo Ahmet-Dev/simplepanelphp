@@ -1,0 +1,202 @@
+# Başlangıç
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^class/ - [F,L]
+
+# HTTPS zorunlu hale getirme
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# www olan URL'leri www olmayan URL'lere yönlendirme
+RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+RewriteRule ^(.*)$ https://%1/$1 [L,R=301]
+
+# Check if the request is not pointing to a real file or directory
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+# Ana sayfayı index.php'ye yönlendirme
+DirectoryIndex index.php
+RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/.*index\.php[\s?/] [NC]
+RewriteRule ^(.*)index\.php$ /$1 [R=301,L]
+
+# Automatically remove .php extension to requests
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([a-zA-Z0-9_-]+)$ $1.php [L]
+RewriteRule ^([a-zA-Z0-9_-]+)$ $1.html [L]
+
+# Dosya veya dizin varsa yeniden yazma
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# /blogs/blog/{id} formatında URL'yi blog-single.php?id={id} şeklinde yönlendirin
+RewriteRule ^blogs/blog/([0-9]+)$ blog-single.php?id=$1 [L,QSA]
+
+# Tüm diğer URL'leri index.php'ye yönlendirin
+RewriteRule ^.*$ index.php [L,QSA]
+
+</IfModule>
+
+# X-Content-Type-Options header'ını ekleyerek MIME tipi saldırılarına karşı korunma
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# X-Frame-Options header'ını ekleyerek clickjacking saldırılarına karşı korunma
+<IfModule mod_headers.c>
+    Header always append X-Frame-Options SAMEORIGIN
+</IfModule>
+
+# X-XSS-Protection header'ını ekleyerek XSS saldırılarına karşı korunma
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# HSTS header'ını ekleyerek HTTPS üzerinden güvenliği artırma ve zorunlu hale getirme
+<IfModule mod_headers.c>
+    Header set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
+
+# Tarayıcı önbellekleme için süre belirleme (performans optimizasyonu)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType text/html "access plus 1 day"
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType text/x-javascript "access plus 1 month"
+    ExpiresByType application/x-shockwave-flash "access plus 1 month"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresDefault "access plus 2 days"
+</IfModule>
+
+<IfModule mod_expires.c>
+# Prevent Hotlinking
+RewriteEngine on
+# Allow requests from your domain and search engines
+#RewriteCond %{HTTP_REFERER} !^$
+#RewriteCond %{HTTP_REFERER} !^https://(www\.)?yourwebsite\.com/ [NC]
+#RewriteCond %{HTTP_REFERER} !^https://(www\.)?google\.* [NC]
+#RewriteCond %{HTTP_REFERER} !^https://(www\.)?bing\.* [NC]
+#RewriteCond %{HTTP_REFERER} !^https://(www\.)?yandex\.* [NC]
+
+# Block requests to image and video files
+# RewriteRule \.(jpg|jpeg|png|gif|webp|bmp|mp4|avi)$ - [F,NC,L]
+
+# Optional: Redirect blocked requests to a specific image (e.g., a warning image)
+# RewriteRule \.(jpg|jpeg|png|gif|webp|bmp|mp4|avi)$ https://www.yourwebsite.com/warning.png [R,L]
+</IfModule>
+
+# Dosya ve klasör güvenliği
+<FilesMatch "^.*\.(htaccess|htpasswd|ini|log|sh|sql)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# .htaccess dosyalarını koruma
+<Files .htaccess>
+    Order Allow,Deny
+    Deny from all
+</Files>
+
+# Dizin listelemeyi devre dışı bırakma
+Options -Indexes
+
+# 404 dosyası
+ErrorDocument 404 /404.php
+
+# 403 dosyası
+ErrorDocument 403 /403.php
+
+# GZIP sıkıştırma (performans optimizasyonu)
+<IfModule mod_deflate.c>
+    # HTML, XML, CSS, JavaScript, Text, JSON, Font ve SVG dosyalarını sıkıştır
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
+    AddOutputFilterByType DEFLATE application/x-font-ttf
+    AddOutputFilterByType DEFLATE font/opentype
+    AddOutputFilterByType DEFLATE font/ttf
+    AddOutputFilterByType DEFLATE font/otf
+    AddOutputFilterByType DEFLATE image/svg+xml
+
+    # Eski tarayıcılara (MSIE 6-7) GZIP sıkıştırmayı kapatma
+    BrowserMatch ^Mozilla/4 gzip-only-text/html
+    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+    Header append Vary User-Agent
+</IfModule>
+
+<IfModule mod_rewrite.c>
+ServerSignature Off
+RewriteEngine On
+RewriteCond %{REQUEST_METHOD} ^(HEAD|TRACE|DELETE|TRACK|DEBUG) [NC]
+RewriteRule ^(.*)$ - [F]
+RewriteCond %{REQUEST_URI} (wp-config\.php|config\.php|bb-config\.php|timthumb\.php|phpthumb\.php|thumb\.php|thumbs\.php|debug\.log) [NC,OR]
+RewriteCond %{REQUEST_URI} \.(htaccess|htpasswd|errordocs|logs|po|mo|ini|inc)$ [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} (;|<|>|'|"|\)|\(|%0A|%0D|%22|%27|%28|%3C|%3E|%00).*(libwww-perl|wget|python|nikto|curl|scan|java|winhttp|HTTrack|clshttp|archiver|loader|email|harvest|extract|grab|miner) [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} (havij|libwww-perl|wget|python|nikto|curl|scan|java|winhttp|clshttp|loader) [NC,OR]
+RewriteCond %{HTTP_USER_AGENT} (%0A|%0D|%27|%3C|%3E|%00|%60) [NC,OR]
+RewriteCond %{HTTP_REFERER} (%0A|%0D|%27|%3C|%3E|%00) [NC,OR]
+RewriteCond %{THE_REQUEST} \?\ HTTP/ [NC,OR]
+RewriteCond %{THE_REQUEST} \/\*\ HTTP/ [NC,OR]
+RewriteCond %{HTTP_COOKIE} (`|'|"|%22|%0A|%0D|%27|%3C|%28|%3E|%00|%60).*(declare|char|set|cast|convert|delete|drop|exec|eval|insert|meta|script|select|truncate|update|union|md5|benchmark|create|alter|order|encode|if|and|or).* [NC,OR]
+RewriteCond %{QUERY_STRING} (`|'|"|%22|%0A|%0D|%27|%3C|%28|%3E|%00|%60).*(declare|char|set|cast|convert|delete|drop|exec|eval|insert|meta|script|select|truncate|update|union|md5|benchmark|create|alter|order|encode|if|and|or).* [NC,OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=http:// [NC,OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=(\.\.//?)+ [NC,OR]
+RewriteCond %{QUERY_STRING} [a-zA-Z0-9_]=/([a-z0-9_.]//?)+ [NC,OR]
+RewriteCond %{QUERY_STRING} \=PHP[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12} [NC,OR]
+RewriteCond %{QUERY_STRING} (\.\./|%2e%2e%2f|%2e%2e/|\.\.%2f|%2e\.%2f|%2e\./|\.%2e%2f|\.%2e/) [NC,OR]
+RewriteCond %{QUERY_STRING} ftp\: [NC,OR]
+RewriteCond %{QUERY_STRING} http\: [NC,OR] 
+RewriteCond %{QUERY_STRING} https\: [NC,OR]
+RewriteCond %{QUERY_STRING} \=\|w\| [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)/self/(.*)$ [NC,OR]
+RewriteCond %{QUERY_STRING} ^(.*)cPath=http://(.*)$ [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*script.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^s]*s)+cript.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*embed.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^e]*e)+mbed.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*object.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^o]*o)+bject.*(>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (\<|%3C).*iframe.*(\>|%3E) [NC,OR]
+RewriteCond %{QUERY_STRING} (<|%3C)([^i]*i)+frame.*(>|%3E) [NC,OR] 
+RewriteCond %{QUERY_STRING} base64_encode.*\(.*\) [NC,OR]
+RewriteCond %{QUERY_STRING} base64_(en|de)code[^(]*\([^)]*\) [NC,OR]
+RewriteCond %{QUERY_STRING} GLOBALS(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} _REQUEST(=|\[|\%[0-9A-Z]{0,2}) [OR]
+RewriteCond %{QUERY_STRING} ^.*(\(|\)|<|>|%3c|%3e).* [NC,OR]
+RewriteCond %{QUERY_STRING} ^.*(\x00|\x04|\x08|\x0d|\x1b|\x20|\x3c|\x3e|\x7f).* [NC,OR]
+RewriteCond %{QUERY_STRING} (NULL|OUTFILE|LOAD_FILE) [OR]
+RewriteCond %{QUERY_STRING} (\.{1,}/)+(motd|etc|bin) [NC,OR]
+RewriteCond %{QUERY_STRING} (localhost|loopback|127\.0\.0\.1) [NC,OR]
+RewriteCond %{QUERY_STRING} (`|<|>|'|%0A|%0D|%27|%3C|%3E|%00|%60) [NC,OR]
+RewriteCond %{QUERY_STRING} concat[^\(]*\( [NC,OR]
+RewriteCond %{QUERY_STRING} union([^s]*s)+elect [NC,OR]
+RewriteCond %{QUERY_STRING} union([^a]*a)+ll([^s]*s)+elect [NC,OR]
+RewriteCond %{QUERY_STRING} \-[sdcr].*(allow_url_include|allow_url_fopen|safe_mode|disable_functions|auto_prepend_file) [NC,OR]
+RewriteCond %{QUERY_STRING} (;|<|>|'|"|\)|%0A|%0D|%22|%27|%3C|%3E|%00).*(/\*|union|select|insert|drop|delete|update|cast|create|char|convert|alter|declare|order|script|set|md5|benchmark|encode|and|or|if) [NC,OR]
+RewriteCond %{QUERY_STRING} (sp_executesql) [NC]
+RewriteRule ^(.*)$ - [F]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST"
+    Header set Access-Control-Allow-Headers "Content-Type"
+</IfModule>
