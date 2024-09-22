@@ -30,7 +30,7 @@ $url_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $url_parts = explode('/', trim($url_path, '/'));
 
 // Eğer URL `uploads` ile başlıyorsa, dosya yolunu çözümleyip dosyayı göster
-if ($url_parts[0] === 'asset' && $url_parts[1] === 'uploads') {
+if ($url_parts[0] === 'asset' && $url_parts[1] === 'asset') {
     // Veritabanındaki base_url ile birleştirerek dosya yolunu oluştur
     $file_url = $base_url . '/' . implode('/', $url_parts);
 
