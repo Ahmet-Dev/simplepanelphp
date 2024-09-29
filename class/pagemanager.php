@@ -29,22 +29,99 @@ $url_path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 // URL'yi '/' işaretine göre parçalara ayır
 $url_parts = explode('/', trim($url_path, '/'));
 
-// Eğer URL `uploads` ile başlıyorsa, dosya yolunu çözümleyip dosyayı göster
-if ($url_parts[0] === 'asset' && $url_parts[1] === 'asset') {
-    // Veritabanındaki base_url ile birleştirerek dosya yolunu oluştur
-    $file_url = $base_url . '/' . implode('/', $url_parts);
+// **robots.txt Yönlendirmesi**
+if ($url_parts[0] === 'robots.txt') {
+    $robots_path = $_SERVER['DOCUMENT_ROOT'] . '/robots.txt';
+    if (file_exists($robots_path)) {
+        header('Content-Type: text/plain');
+        readfile($robots_path);
+        exit;
+    } else {
+        http_response_code(404);
+        echo "robots.txt bulunamadı.";
+        exit;
+    }
+}
 
-    // Dosyanın var olup olmadığını kontrol edelim (base_url yerine gerçek dosya sisteminde kontrol için file_exists gerekebilir)
-    $file_path = $_SERVER['DOCUMENT_ROOT'] . '/' . implode('/', $url_parts); // Sunucu üzerinde gerçek dosya yolunu kontrol et
-    if (file_exists($file_path)) {
-        // Doğrudan dosyayı sunucuya gönder
-        header('Content-Type: ' . mime_content_type($file_path));
+// **sitemap.xml Yönlendirmesi**
+if ($url_parts[0] === 'sitemap.xml') {
+    $sitemap_path = $_SERVER['DOCUMENT_ROOT'] . '/sitemap.xml';
+    if (file_exists($sitemap_path)) {
+        header('Content-Type: application/xml');
+        readfile($sitemap_path);
+        exit;
+    } else {
+        http_response_code(404);
+        echo "sitemap.xml bulunamadı.";
+        exit;
+    }
+}
+
+// **Asset Klasörüne ve Uploads'a Erişim** - Statik dosyalar için
+if ($url_parts[0] === 'asset') {
+    // Sunucudaki gerçek dosya yolunu oluştur
+    $file_path = $_SERVER['DOCUMENT_ROOT'] . '/' . implode('/', $url_parts);
+
+    // Dosyanın var olup olmadığını ve dosya olup olmadığını kontrol et
+    if (file_exists($file_path) && is_file($file_path)) {
+        
+        // MIME türünü manuel olarak uzantıya göre belirleyelim
+        $ext = pathinfo($file_path, PATHINFO_EXTENSION);
+        switch ($ext) {
+            case 'css':
+                $mime_type = 'text/css';
+                break;
+            case 'js':
+                $mime_type = 'application/javascript';
+                break;
+            case 'woff':
+                $mime_type = 'font/woff';
+                break;
+            case 'woff2':
+                $mime_type = 'font/woff2';
+                break;
+            case 'ttf':
+                $mime_type = 'font/ttf';
+                break;
+            case 'otf':
+                $mime_type = 'font/otf';
+                break;
+            case 'eot':
+                $mime_type = 'application/vnd.ms-fontobject';
+                break;
+            case 'svg':
+                $mime_type = 'image/svg+xml';
+                break;
+            case 'png':
+                $mime_type = 'image/png';
+                break;
+            case 'jpg':
+            case 'jpeg':
+                $mime_type = 'image/jpeg';
+                break;
+            case 'gif':
+                $mime_type = 'image/gif';
+                break;
+            case 'pdf':
+                $mime_type = 'application/pdf';
+                break;
+            default:
+                // MIME türü bilinmeyen dosyalar için varsayılan tür
+                $mime_type = mime_content_type($file_path);
+                if (!$mime_type) {
+                    $mime_type = 'application/octet-stream'; // Varsayılan dosya türü
+                }
+                break;
+        }
+
+        // Doğru MIME türü ile dosyayı tarayıcıya gönder
+        header('Content-Type: ' . $mime_type);
         readfile($file_path);
         exit;
     } else {
-        // Eğer dosya bulunamazsa 404 döndür
-        http_response_code(404);
-        include './404.php';
+        // Dosya bulunamazsa 404 hata sayfası göster
+        echo "Dosya bulunamadı veya bir dizin: " . $file_path . "<br>";
+        http_response_code(404); // 404 hata kodu
         exit;
     }
 }
@@ -106,4 +183,3 @@ else {
         include './404.php'; // Özel 404 sayfası
     }
 }
-?>
