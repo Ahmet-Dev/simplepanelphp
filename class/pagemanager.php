@@ -43,6 +43,20 @@ if ($url_parts[0] === 'robots.txt') {
     }
 }
 
+// **ads.txt Yönlendirmesi**
+if ($url_parts[0] === 'ads.txt') {
+    $ads_path = $_SERVER['DOCUMENT_ROOT'] . '/ads.txt';
+    if (file_exists($ads_path)) {
+        header('Content-Type: text/plain');
+        readfile($ads_path);
+        exit;
+    } else {
+        http_response_code(404);
+        echo "ads.txt bulunamadı.";
+        exit;
+    }
+}
+
 // **sitemap.xml Yönlendirmesi**
 if ($url_parts[0] === 'sitemap.xml') {
     $sitemap_path = $_SERVER['DOCUMENT_ROOT'] . '/sitemap.xml';
