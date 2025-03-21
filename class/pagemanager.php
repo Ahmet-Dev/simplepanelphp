@@ -4,17 +4,20 @@ require_once './class/menu.php';
 require_once './class/page.php';
 require_once './class/blog.php';
 require_once './class/special.php';
-
+require_once './class/firewallsimple.php';
 // Veritabanı bağlantısı
 try {
     $menuManager = new MenuManager($db);
     $settingsManager = new WebsiteManager($db);
     $blogManager = new Blog($db);
     $pagesManager = new PagesManager($db);  // PagesManager sınıfını da dahil ettik
+    $firewall = new Firewall($db);
 } catch (PDOException $exception) {
     error_log("Veritabanı bağlantı hatası: " . $exception->getMessage());
     die("Veritabanına bağlanırken bir sorun oluştu. Lütfen daha sonra tekrar deneyin.");
 }
+// Firewall Başlat
+$firewall->runSecurityChecks();
 
 // Menü öğelerini veritabanından al
 $menus = $menuManager->listMenus();
@@ -197,3 +200,4 @@ else {
         include './404.php'; // Özel 404 sayfası
     }
 }
+
